@@ -101,7 +101,7 @@ class NeuralCode:
 
     Class for a neural code, associated to the neural ring.
 
-    >>> assert_build()
+    >>> assert_build() #debugging i suppose
 
     """
     
