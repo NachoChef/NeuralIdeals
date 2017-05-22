@@ -4,7 +4,7 @@ from kivy.graphics import *
 
 class VisualizeWidget():
     def __init__(self, **kwargs):
-        super(VisualizeWidget, self).__init__(**kwargs)
+        super(VisualizeWidget, self).__init__()
         self.bind(pos=self.update_canvas)
         self.bind(size=self.update_canvas)
         self.update_canvas()
