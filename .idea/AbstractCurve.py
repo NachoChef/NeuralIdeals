@@ -2,7 +2,7 @@
 
 class AbstractCurve:
     self.id = 0
-    CurveLabel m_label
+    m_label = CurveLabel()
     m_id = int()
 
     def __init__(self, label : CurveLabel):
@@ -21,7 +21,7 @@ class AbstractCurve:
 
     def compareTo(self, o : AbstractCurve):
         tmp = m_label.compareTo(o.m_label)
-        if tmp not 0:
+        if tmp is not 0:
             return tmp
         this_id = self.m_id
         other_id = o.m_id
