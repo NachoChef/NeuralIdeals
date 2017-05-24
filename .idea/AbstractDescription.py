@@ -2,7 +2,7 @@
 import java.util.HashMap;                       dictionary
 import java.util.Iterator;                      iter()
 import java.util.Set;                           tuple
-import java.util.StringTokenizer;               re split()
+import java.util.StringTokenizer;               re.split()
 import java.util.TreeSet;                       sorted() 
 '''
 import re
@@ -53,3 +53,45 @@ class AbstractDescription:
     def makeForTesting(self, s : str):
         ad_zones = OrderedDict()
         ad_zones.append() #no idea
+        #more stuff, think just for testing
+
+    def one_of_multiple_instances(self, c : AbstractCurve):
+        for cc in m_contours:
+            if cc not c and cc.matches_label(c):
+                return True
+        return False
+
+    def print_contour(self, c : AbsractCurve):
+        if self.one_of_multiple_instances(c):
+            pass
+    #not sure if need
+
+    def getNumZones(self):
+        return len(self.m_zones)
+    #end getNumZones
+
+    def checksum(self):
+        scaling, result = 2.1, 0.0
+        for c in m_contours:
+            result += c.checksum() * scaling
+            scaling += 0.07
+            scaling += 0.05
+            for z in m_zones:
+                if z.is_in(c):
+                    result += z.checksum() * scaling
+                    scaling += 0.09
+        return result
+    #end checksum
+
+    def includesLabel(self, l : CurveLabel):
+        for c in m_contours:
+            if c.getLabel() is l:
+                return True
+        return False
+
+    def hasLabelEquivalentZone(self, z : AbstractBasicRegion):
+        for zone in m_zones:
+            if zone.isLabelEquivalent(z):
+                return True
+        return False
+    
