@@ -26,3 +26,11 @@ class ConvexPolygon:
     def showPoints(self):
         print(self.x_points)
         print(self.y_points)
+'''
+    def isConvex(self):
+        signs = [zCrossProduct(a, b, c) > 0 for a, b, c in zip(vertices[2:], vertices[1:], vertices)]
+        return all(signs) or not any(signs)
+
+    def crossProduct(self, a, b, c):
+        return (a[0] - b[0]) * (b[1] - c[1]) - (a[1] - b[1]) * (b[0] - c[0])
+'''
