@@ -1,6 +1,5 @@
-import itertools
-import time
-import math
+import itertools, time, math
+from InductiveCirclesInclusion import *
  
 from multiprocessing.pool import ThreadPool
 from itertools import tee, izip
@@ -982,7 +981,6 @@ def reduced_ideal(z, I):
     N.append(z)
     N_1 = sorted(N)
     return Ideal(N_1)
-
 
 if __name__ == "__main__":
     import doctest
