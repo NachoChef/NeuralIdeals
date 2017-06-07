@@ -1,8 +1,11 @@
 import math as m
 import matplotlib.pyplot as plt
 from scipy.spatial import ConvexHull
+import numpy as np
 
 """
+
+
 
 A polygon generator, generating the points for a circle of specified radius at a specified center point.
 
@@ -21,7 +24,7 @@ class ConvexPolygon:
     def __init__(self, c : tuple, r : int):
         r"""
 
-            Constructs a simple, circular polygonal shape.
+            Constructs a simple, circular polygonal shape. Before modification, the shape is convex.
 
         INPUT:
 
@@ -42,7 +45,7 @@ class ConvexPolygon:
         self.radius = r
         self.x_points = [(self.center_point[0] + self.radius * m.cos(x)) for x in self.drange(0, 2 * m.pi, 0.05)]
         self.y_points = [(self.center_point[1] + self.radius * m.sin(y)) for y in self.drange(0, 2 * m.pi, 0.05)]
-        self.points = {(i+1) : [self.x_points[i], self.y_points[i]] for i in range(len(self.x_points))}
+        self.points = {(i+1) : (self.x_points[i], self.y_points[i]) for i in range(len(self.x_points))}
 
     def drange(self, start, stop, step):
         r"""
@@ -117,12 +120,12 @@ class ConvexPolygon:
 
         	>>> circle = ConvexPolygon((0, 0), 1)
         	>>> circle.toString()
-        	1.0, 0.9987, 0.995, [...]
-        	0.0, 0.0499, 0.0998, [...]
+        	X values: 1.0, 0.9987, 0.995, [...]
+        	Y values: 0.0, 0.0499, 0.0998, [...]
 
         """
-        print(self.x_points)
-        print(self.y_points)
+        print("X values: " + str(self.x_points))
+        print("Y values: " + str(self.y_points))
 
     def isConvex (self):
         r"""
@@ -145,5 +148,37 @@ class ConvexPolygon:
             True
             
         """
+        npa = np.asarray(self.points.values())
 
-        return (len(self.points) == len(ConvexHull(self.points)))
+        return len(self.points) == len(ConvexHull(0, npa).simplices)
+
+    def modify(self, check=True, **points):
+        r"""
+        
+            Takes a variable-length set of point numbers and coordinates, performs the modifications,
+            and checks convexity by default.
+        
+        :param points: 
+        
+        :param check:
+         
+        :return: None
+        
+        EXAMPLE:
+        
+            >>> circle = ConvexPolygon((0, 0), 1)
+            >>> point_int = (1, 2, 3)
+            >>> point_coord = ((0,0), (1,1), (2,2))
+            >>> circle.modify(False, point_int, point_coord)
+        
+        """
+        try:
+            temp = self.points
+            for arg in points:
+                self.points[arg] = points[arg]
+            if check:
+                if not self.isConvex():
+                    raise ValueError('The supplied point resulted in a non-convex shape.')
+        except ValueError as err:
+            self.points = temp
+            print(err.args)
