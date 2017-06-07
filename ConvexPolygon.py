@@ -148,9 +148,8 @@ class ConvexPolygon:
             True
             
         """
-        npa = np.asarray(self.points.values())
-
-        return len(self.points) == len(ConvexHull(0, npa).simplices)
+        npa = np.asfarray(self.points.values())
+        return len(self.points) == len(ConvexHull(npa).simplices)
 
     def modify(self, check=True, **points):
         r"""
