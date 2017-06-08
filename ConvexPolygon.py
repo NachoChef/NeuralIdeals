@@ -151,7 +151,7 @@ class ConvexPolygon:
         npa = np.asfarray(self.points.values())
         return len(self.points) == len(ConvexHull(npa).simplices)
 
-    def modify(self, check=True, **points):
+    def modify(self, check=True, **kwargs):
         r"""
         
             Takes a variable-length set of point numbers and coordinates, performs the modifications,
@@ -173,8 +173,8 @@ class ConvexPolygon:
         """
         try:
             temp = self.points
-            for arg in points:
-                self.points[arg] = points[arg]
+            for point, coord in kwargs.items():
+                self.points[point] = coord
             if check:
                 if not self.isConvex():
                     raise ValueError('The supplied point resulted in a non-convex shape.')
