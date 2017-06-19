@@ -64,22 +64,18 @@ def sort(codes, iteration=0):
     :param iteration:
     :return:
     """
-    #start at sublist index, sort downwards
-    if len(codes) <= 1:
+    if not (any(isinstance(code, list) for code in codes) and len(codes) > 1):
+        print("EXIT")
         return codes
-    end = len(codes)-1
-    for pos in range(len(codes)-1):
-        for subpos in range(pos, end):
+    for pos in reversed(range(len(codes))):
+        for subpos in range(pos):
             if codes[subpos][iteration] < codes[subpos+1][iteration]: #so 0,1 becomes 1,0 -> shift 0 to rightmost
-                codes[subpos][iteration], codes[subpos+1][iteration] = codes[subpos+1][iteration], codes[subpos][iteration]
-
-    #return (grouped ones) + (grouped zeroes)
-    iteration += 1
+                codes[subpos], codes[subpos+1] = codes[subpos+1], codes[subpos]
+    # return (grouped ones) + (grouped zeroes)
     mid = 0
     for item in codes:
         if item[iteration] == 1:
             mid += 1
-        else:
-            break
-
-    return sort(codes[0:mid], iteration).append(sort(codes[mid+1:end], iteration))
+    iteration += 1
+    return codes
+    #return sort(codes[0:mid+1], iteration) + sort(codes[mid+1:], iteration)
