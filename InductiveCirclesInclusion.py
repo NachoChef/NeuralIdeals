@@ -65,7 +65,7 @@ def sort(codes, iteration=0):
         Returns a sorted list of lists, organized 1 -> 0
     :param codes: a list of binary code words
     :param iteration: the position the function will sort
-    :return: a sorted code word
+    :return: a 'sorted' code word
     """
     # if is it the first iteration, check to make sure contents are lists and coerce if not
     # short circuit evaluation for iteration
@@ -85,15 +85,11 @@ def sort(codes, iteration=0):
 
     # return (grouped ones) + (grouped zeroes)
     # so we find the slice index for the group of ones
-    mid = 0
-    for item in codes:
-        if item[iteration] == 1:
-            mid += 1
+    mid = max(i for i in range(len(codes)) if codes[i][iteration] == 1)
 
     # increment iteration and move to next position
     # we split the lists and sort those sublists
     iteration += 1
-
     return sort(codes[:mid], iteration) + sort(codes[mid:], iteration)
 
 
@@ -113,6 +109,6 @@ def fix_oscillation(codes):
     :return: boolean, codewords
     """
     # if the second set of codes are reversed then we reverse the preceding list if all upper dims are equivalent
-    coords = (((x) for x in code if x == 0) for code in codes)
+
 
 
