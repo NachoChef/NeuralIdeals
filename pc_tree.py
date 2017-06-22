@@ -11,50 +11,67 @@ TODO:
 from enum import Enum
 import ctypes
 
+
+########################################
+# data structures
+class PClabel(Enum):
+    EMPTY = 0
+    PARTIAL = 1
+    FULL = 2
+
+
+# end PClabel
+
+class Pnode:
+    def __init__(self):
+        self.parentArc = None
+
+
+# end Pnode
+
+class PCarc:
+    def __init__(self):
+        # type PCarc
+        self.a, self.b, self.twin, self.yPnode = None, None, None, None
+        self.yParent = bool()
+        self.label = PClabel.EMPTY
+
+
+# end PCarc
+
+########################################
+
 class pc_tree:
 
-    ########################################
-    #data structures
-    class PClabel(Enum):
-        EMPTY = 0
-        PARTIAL = 1
-        FULL = 2
-    #end PClabel
-
-    class Pnode:
-        def __init__(self):
-            self.parentArc = None
-    #end Pnode
-
-    class PCarc:
-        def __init__(self):
-            #type PCarc
-            self.a, self.b, self.twin, self.yPnode = None, None, None, None
-            self.yParent = bool()
-            self.label = PClabel.EMPTY
-    #end PCarc
-
-    ########################################
-
     def __init__(self, m, row, col):
-        self.leaves = col
-        self.M = list()
+        self.numLeaves = col
+        self.M = [[0] * col] * row
+        '''
         for i in range(row):
-            self.M[i] = col
-
+            self.M[i] = int(col)
+        '''
         for i in range(row):
             for j in range(col):
                 self.M[i][j] = m[i][j] #or is it [j][i]
-
+        self.leafArcs = list()
+        print("INIT")
         self.initializeTree()
-
+        self.terminalPath = list()
+        self.partialArcs = list()
+        self.newCnode = PCarc()
         for i in range(1):
             self.currRow = i
+            print("CLEAR PARARCS")
             self.partialArcs.clear()
+            print("LABELTREE")
             self.labelTree()
+            print("TPATH")
             self.getTerminalPath()
+            print("SPLIT")
             self.splitTree()
+            print("CONTRACTION")
             self.contractionStep()
+        self.terminalChild = list()
     #end init
 
     def contractionStep(self):
@@ -66,7 +83,7 @@ class pc_tree:
 
             if currArc.twin.degree <= 2:
                 self.contractEdge(currArc)
-            elif currArc.twin.yPnode is None
+            elif currArc.twin.yPnode is None:
                 self.contractEdge(currArc)
 
             currArc = currArc.b if marked[currArc.a] else currArc.a
@@ -82,7 +99,7 @@ class pc_tree:
 
         if edge.b.a == edge:
             edge.b.a = edge.twin.b
-        elif edge.b.b == edge
+        elif edge.b.b == edge:
             edge.b.b = edge.twin.b
         else:
             print("error2")
@@ -104,16 +121,16 @@ class pc_tree:
 
     def sortTerminalPath(self):
         sortedPath = list()
-        if len(terminalPath) <= 1:
+        if len(self.terminalPath) <= 1:
             return None
 
         marked = dict()
-        for arc in terminalPath:
+        for arc in self.terminalPath:
             counter = 0
             currArc = arc
             while not marked[currArc]:
                 marked[currArc] = True
-                if currArc.twin.label == PARTIAL:
+                if currArc.twin.label == PClabel.PARTIAL:
                     counter += 1
 
                 currArc = currArc.b if marked[currArc.a] else currArc.a
@@ -129,35 +146,37 @@ class pc_tree:
             if t1 is not None and t2 is not None:
                 break
 
-        sortedPath.push_back(t1)
+        sortedPath.append(t1)
 
         currArc = t1
-        pr = getParent(currArc)
+        pr = self.getParent(currArc)
         isApex = False
         while not isApex:
             isApex = True
-            for i in range(len(terminalPath)):
-                arc = terminalPath[i]
-                if isSameNode (arc, pr):
-                    sortedPath.push_back(arc)
-                    currArc = arcpr = getParent(currArc)
-                    terminalPath.erase(terminalPath.begin() + 1)
+            for i in range(len(self.terminalPath)):
+                arc = self.terminalPath[i]
+                if self.isSameNode(arc, pr):
+                    sortedPath.append(arc)
+                    currArc = arc
+                    pr = self.getParent(currArc)
+                    del self.terminalPath[self.terminalPath[0] + 1]
                     isApex = False
                     break
 
             if isApex:
-                sortedPath.push_back(currArc)
+                sortedPath.append(currArc)
 
         while currArc is not t2:
-            for i in len(terminalPath):
-                arc = terminalPath[i]
-                if isSameNode(getParent(arc), currArc):
-                    sortedPath.push_back(arc)
-                    currArc = arcterminalPath.erase(terminalPath.begin() + i)
+            for i in range(len(self.terminalPath)):
+                arc = self.terminalPath[i]
+                if self.isSameNode(self.getParent(arc), currArc):
+                    sortedPath.append(arc)
+                    currArc = arc
+                    del self.terminalPath[self.terminalPath[0] + i]
                     break
 
-        terminalPath.clear()
-        terminalPath = sortedPath
+        self.terminalPath.clear()
+        self.terminalPath = sortedPath
     #end sortTerminalPath
 
     def setDegree(self, node):
@@ -178,27 +197,27 @@ class pc_tree:
 
     def splitTree(self):
         self.sortTerminalPath()
-        terminalChild = list()
+        self.terminalChild = list()
         marked = dict()
-        for arc in terminalPath:
+        for arc in self.terminalPath:
             marked.clear()
             currArc = arc
 
-            while True
+            while True:
                 marked[currArc] = True
-                if currArc.twin.label == EMPTY or currArc.twin.label == FULL:
-                    terminalChild.push_back(currArc)
+                if currArc.twin.label == PClabel.EMPTY or currArc.twin.label == PClabel.FULL:
+                    self.terminalChild.append(currArc)
                     break
 
                 currArc = currArc.b if marked[currArc.a] else currArc.a
 
-        terminalBounds = [[None] * len(terminalPath)] * len(terminalPath)
-        for i in range(len(terminalPath)):
+        terminalBounds = [[None] * len(self.terminalPath)] * len(self.terminalPath)
+        for i in range(len(self.terminalPath)):
             bounds = [None] * 4
-            terminalBounds.push_back(bounds)
+            terminalBounds.append(bounds)
 
-        for i in range(terminalPath.size()):
-            arc = terminalChild[i]
+        for i in range(len(self.terminalPath)):
+            arc = self.terminalChild[i]
 
             nextArc = arc.a
             currArc = arc
@@ -211,34 +230,34 @@ class pc_tree:
                 if currLabel is not nextLabel:
                     if currlabel == FULL:
                         terminalBounds[i][0] = currArc
-                    elif currLabel == EMPTY:
+                    elif currLabel == PClabel.EMPTY:
                         terminalBounds[i][3] = currArc
 
-                    if nextLabel == FULL:
+                    if nextLabel == PClabel.FULL:
                         terminalBounds[i][1] = nextArc
-                    elif nextLabel = EMPTY:
+                    elif nextLabel == PClabel.PClabel.EMPTY:
                         terminalBounds[i][2] = nextArc
 
                 prevArc, currArc = currArc, nextArc
                 nextArc = nextArc.b if nextArc.a == prevArc else nextArc.a
 
-        if len(terminalPath) > 1:
-            for i in range(len(terminalPath)):
-                for j in range(i+1, len(terminalPath)):
-                    if isAdjacent(terminalPath[i], terminalPath[j]):
-                        removeEdge(terminalPath[i], terminalPath[j])
+        if len(self.terminalPath) > 1:
+            for i in range(len(self.terminalPath)):
+                for j in range(i+1, len(self.terminalPath)):
+                    if self.isAdjacent(self.terminalPath[i], self.terminalPath[j]):
+                        self.removeEdge(self.terminalPath[i], self.terminalPath[j])
 
-        for i in range len(terminalChild):
+        for i in range(len(self.terminalChild)):
             fullArc = PCarc()
             fullA = fullArc if i == 0 else None
-            fullB = fullArc if i == (len(terminalChild)-1) else None
+            fullB = fullArc if i == (len(self.terminalChild)-1) else None
 
             if terminalBounds[i][0] is not None:
                 fullArc.a = terminalBounds[i][0]
                 fullArc.b = terminalBounds[i][1]
 
                 if terminalBounds[i][2] == None:
-                    if terminalBounds[i][0].a == terminalBounds[i][1]a:
+                    if terminalBounds[i][0].a == terminalBounds[i][1].a:
                         terminalBounds[i][0].a = fullArc
                     elif terminalBounds[i][0].b == terminalBounds[i][1]:
                         terminalBounds[i][0].b = fullArc
@@ -269,17 +288,180 @@ class pc_tree:
             fullArc.twin = PCarc()
             fullArc.twin.twin = fullArc
 
-            if i is 0
+            if i is 0:
+                initC = fullArc.twin
+            else:
+                fullArc.twin.a = prevC
+                prevC.b = fullArc.twin
 
-#continue
+            prevC = fullArc.twin
 
+            fullArc.yParent = False
+            fullArc.twin.yParent = True
 
+            for i in range(len(terminalChild)):
+                if terminalBounds[i][0] != None:
+                    self.setDegree(terminalBounds[i][0])
 
-    def initiallizeTree(self):
+            if fullArc.yPnode != None:
+                self.setNewPnode(fullArc)
+
+        emptA, emptB = PCarc(), PCarc()
+        for i in range(len(terminalChild)):
+            fullArc = PCarc()
+
+            if i is 0:
+                emptA = fullArc
+
+            if i == len(terminalChild)-1:
+                emptB = fullArc
+
+            if terminalBounds[i][2] != None:
+                fullArc.a = terminalBounds[i][2]
+                fullArc.b = terminalBounds[i][3]
+
+                if terminalBounds[i][1] == None:
+                    if terminalBounds[i][2].a == terminalBounds[i][3]:
+                        terminalBounds[i][2].a = fullArc
+                    elif terminalBounds[i][2].b == terminalBounds[i][3]:
+                        terminalBounds[i][2].b = fullArc
+                    else:
+                        print("TERMINAL BOUND5")
+
+                    if terminalBounds[i][3].a == terminalBounds[i][2]:
+                        terminalBounds[i][3].a = fullArc
+                    elif terminalBounds[i][3].b == terminalBounds[i][2]:
+                        terminalBounds[i][3].b = fullArc
+                    else:
+                        print("TERMINAL BOUND6")
+
+                else:
+                    if terminalBounds[i][2].a == terminalBounds[i][0]:
+                        terminalBounds[i][2].a = fullArc
+                    elif terminalBounds[i][2].b == terminalBounds[i][0]:
+                        terminalBounds[i][2].b = fullArc
+                    else:
+                        print("TERMINAL BOUND7")
+
+                    if terminalBounds[i][3].a == terminalBounds[i][1]:
+                        terminalBounds[i][3].a = fullArc
+                    elif terminalBounds[i][3].b == terminalBounds[i][1]:
+                        terminalBounds[i][3].b = fullArc
+                    else:
+                        print("TERMINAL BOUND8")
+
+            fullArc.twin = PCarc()
+            fullArc.twin.twin = fullArc
+
+            if i is 0:
+                initC = fullArc.twin
+            else:
+                fullArc.twin.a = prevC
+                prevC.b = fullArc.twin
+
+            prevC = fullArc.twin
+            fullArc.yParent = False
+            fullArc.twin.yParent = True
+
+            for i in range(len(self.terminalChild)):
+                if terminalBounds[i][2] != None:
+                    self.setDegree(terminalBounds[i][2])
+
+        fullA.twin.a = emptA.twin
+        emptA.twin.a = fullA.twin
+
+        fullB.twin.a = emptA.twin
+        emptB.twin.b = fullB.twin
+
+        newCnode = initC
+        self.rootArc = newCnode
+        self.setDegree(newCnode)
+
+        assert(newCnode.degree == len(self.terminalChild) * 2)
+    #end splitTree
+
+    def setNewPnode(self, node):
+        marked = dict()
+        currArc = node
+        newPnode = Pnode()
+
+        while not marked[currArc]:
+            marked[currArc] = True
+            currArc.yPnode = newPnode
+            currArc = currArc.b if marked[currArc.a] else currArc.a
+
+        newPnode.parentArc = self.getParent(node)
+    #end setNewPnode
+
+    def isAdjacent(self, nodeA, nodeB):
+        pA = self.getParent(nodeA)
+        pB = self.getParent(nodeB)
+
+        return True if self.isSameNode(pA, nodeB) or self.isSameNode(pB, nodeA) else False
+    #end isAdjacent
+
+    def removeEdge(self, nodeA, nodeB):
+        marked = dict()
+
+        currArc = nodeA
+        while not marked[currArc]:
+            marked[currArc] = True
+            currArc = currArc.b if marked[currArc.a] else currArc.a
+
+        currArc = nodeB
+        while not marked[currArc.twin]:
+            if marked[currArc]:
+                print("PROBLEM removeEdge() Cannot find common edge!")
+
+            marked[currArc] = True
+            currArc = currArc.b if marked[currArc].a else currArc.a
+
+        self.removeEdge(currArc)
+    #end removeEdge
+
+    def removeEdge(self, arc):
+        prev, next = arc.a, arc.b
+
+        if prev.a == arc:
+            prev.a = next
+        else:
+            if prev.b != arc:
+                print("WARNING! removeEdge()")
+            prev.b = next
+
+        if next.a == arc:
+            next.a = prev
+        else:
+            if next.b != arc:
+                print("WARNING removeEdge()")
+            next.b = prev
+
+        prev = arc.twin.a
+        next = arc.twin.b
+
+        if prev.a == arc.twin:
+            prev.a = next
+        else:
+            if prev.b != arc.twin:
+                print("WARNING removeEdge()")
+            prev.b = next
+
+        if next.a == arc.twin:
+            next.a = prev
+        else:
+            if next.b != arc.twin:
+                print("WARNING removeEdge()")
+            next.b = prev
+
+        del arc.twin
+        del arc
+    #end removeEdge(2)
+
+    def initializeTree(self):
         parent = Pnode()
-        prev = NULL
-        init = NULL
-        # leafArcs = new PCarc*[self.numLeaves]
+        prev = None
+        init = None
+        self.leafArcs = [None] * self.numLeaves
 
         for i in range(self.numLeaves):
             a = PCarc()
@@ -290,14 +472,14 @@ class pc_tree:
             a.twin = b
 
             # Let a be the one point to the parent
-            a.yParent = true
-            b.yParent = true
+            a.yParent = True
+            b.yParent = True
 
             # set yPnode
             a.yPnode = parent
 
             # leaf pointers
-            leafArcs[i] = b
+            self.leafArcs[i] = b
 
             # Leaf Neighbours point to self
             b.a = b
@@ -315,26 +497,26 @@ class pc_tree:
                 init = a
 
             # for end case
-            if i == numLeaves - 1:
+            if i == self.numLeaves - 1:
                 a.b = init
                 init.a = a
 
             prev = a
 
             if i == 0:
-                rootArc = a
+                self.rootArc = a
 
     def labelTree(self):
-        # reset all counters and set all labels to EMPTY
+        # reset all counters and set all labels to PClabel.EMPTY
         marked = dict()
 
-        currArc = leafArcs[0]
-        resetArcSet(currArc, marked)
+        currArc = self.leafArcs[0]
+        self.resetArcSet(currArc, marked)
 
-        for i in range(numLeaves):
-            if (M[self.currRow][i] == 0):
+        for i in range(self.numLeaves):
+            if (self.M[self.currRow][i] == 0):
                 continue
-            setFullNode(leafArcs[i])
+            self.setFullNode(self.leafArcs[i])
 
     def setFullNode(self, arc):
         if arc.label == PClabel.FULL:
@@ -342,70 +524,69 @@ class pc_tree:
 
         marked = dict()
 
-        arc.label = FULL
-        marked[arc] = true
+        arc.label = PClabel.FULL
+        marked[arc] = True
 
         IncrementCounter(arc.twin)
 
         currArc = arc.a
 
         while currArc != arc:
-            currArc.label = FULL
-            marked[currArc] = true
+            currArc.label = PClabel.FULL
+            marked[currArc] = True
             incrementCounter(currArc.twin)
 
-            if marked[currArc.a] == false:
+            if marked[currArc.a] == False:
                 currArc = currArc.a
             else:
                 currArc = currArc.b
 
     def storePartialArc(self, *arc):
         marked = dict()
-        for a in range(partialArcs):
+        for a in range(self.partialArcs):
             mark.clear()
             currArc = a
             while not marked[currArc]:
-                marked[currArc] = true
+                marked[currArc] = True
                 if currArc == arc:
                     return
                 currArc = currArc.b if marked[currArc.a] else currArc.a
-        partialArcs.push_back(arc)
+        self.partialArcs.append(arc)
 
-    # NEED TO LOOK AT THIS
     def resetArcSet(self, arc, marked):
         # If already marked, return
-        if marked[arc] == true:
-            return
+        if marked[arc] == True:
+            return None
         arc.fullCounter = 0
-        arc.label = EMPTY
-        marked[arc] = true
+        arc.label = PClabel.EMPTY
+        marked[arc] = True
 
         # preform same thing on twin
-        resetArcSet(arc.twin, marked)
+        self.resetArcSet(arc.twin, marked)
 
         # end if there are no neighbours but itself
         if arc.a == arc:
-            return
-        resetArcSet(arc.a, marked)
-        resetArcSet(arc.b, marked)
+            return None
+        self.resetArcSet(arc.a, marked)
+        self.resetArcSet(arc.b, marked)
 
     def getTerminalPath(self):
-        terminalPath.clear()
+        self.terminalPath.clear()
 
         if partialArcs.size() == 1:
             print("Only 1 Partial Node")
-            terminalPath.push_back(partialArcs[0])
+            self.terminalPath.append(self.partialArcs[0])
         else:
             # Intialize - Marked all partial node arcs
             for arc in range(partialArcs):
-                marked[arc] = true
+                marked[arc] = True
                 # add to terminal path
-                terminalPath.push_back(arc)
+                self.terminalPath.append(arc)
 
                 currArc = arc.a
                 while currArc != arc:
-                    marked[curr] = true
-                    if marked[currArc.a] != true:
+                    marked[curr] = True
+                    if marked[currArc.a] != True:
                         currArc = currArc.a
                     else:
                         currArc = currArc.b
@@ -415,12 +596,12 @@ class pc_tree:
                 p = getParent(arc)
 
                 # add to terminal path
-                terminal.push_back(p)
+                terminal.append(p)
 
                 if marked[p]:
                     # found collision
                     # store potential apex
-                    potentialApex.push_back(p)
+                    potentialApex.append(p)
 
                     # pop arc
                     particalArc.erase(particalArcs.begin())
@@ -428,12 +609,12 @@ class pc_tree:
                     continue
 
                 else:
-                    marked[p] = true
+                    marked[p] = True
 
                     currArc = p.a
                     while (currArc != p):
-                        marked[currArc] = true
-                        if marked[currArc.a] != true:
+                        marked[currArc] = True
+                        if marked[currArc.a] != True:
                             currArc = currArc.a
                         else:
                             currArc = currArc.b
@@ -441,9 +622,9 @@ class pc_tree:
                     particalArcs.erase(partialArcs.begin())
 
                     # add parent arc
-                    particalArcs.push_back(p)
+                    particalArcs.append(p)
 
-            terminalPathClean()
+            self.terminalPathClean()
 
     def terminalPathClean(self):
         marked = dict()
@@ -451,14 +632,14 @@ class pc_tree:
         # determine Highest Point
         highestArc = None
 
-        for i in range(len(terminalPath)):
-            k = terminalPath[i]
+        for i in range(len(self.terminalPath)):
+            k = self.terminalPath[i]
             tt = True
-            for q in range(terminalPath):
+            for q in range(self.terminalPath):
                 if q == k:
                     continue
-                if not isHigherArc(k, q):
-                    tt = false
+                if not self.isHigherArc(k, q):
+                    tt = False
                     break
 
             if tt:
@@ -466,10 +647,10 @@ class pc_tree:
                 highestNum = i
                 break
         while not marked[currArc]:
-            if currArc.twin.label == partial:
-                isApex = true
+            if currArc.twin.label == PClabel.PARTIAL:
+                isApex = True
                 break
-            marked[currArc] = true
+            marked[currArc] = True
             currArc = currArc.b if marked[currArc.a] else currArc.a
 
         marked.clear()
@@ -478,17 +659,17 @@ class pc_tree:
             numEntering = 0
 
             while not marked[currArc]:
-                for q in range(terminalPath):
+                for q in range(len(self.terminalPath)):
                     if q == highestArc:
                         continue
-                    if isSameNode(currArc.twin, q):
+                    if self.isSameNode(currArc.twin, q):
                         numEntering += 1
                         break
 
                 if numEntering >= 2:
-                    isApex = true
+                    isApex = True
                     break
-                marked[currArc] = true
+                marked[currArc] = True
                 currArc = currArc.b if marked[currArc.a] else currArc.a
 
         # if apex is found, then done
@@ -496,15 +677,16 @@ class pc_tree:
             return
         else:
             # remove highest point and REPEAT
-            terminalPath.erase(terminalPath.begin() + highestNum)
-            terminalPathClean()
+            '''problem here'''
+            self.terminalPath.erase(self.terminalPath.begin() + highestNum)
+            self.terminalPathClean()
 
     def isHigherArc(self, a, b):
         marked = dict()
         currArc = a
 
         while not marked[currArc]:
-            marked[currArc] = true
+            marked[currArc] = True
 
             if currArc == b:
                 return True
@@ -517,32 +699,32 @@ class pc_tree:
         marked = dict()
         currArc = a
         while not marked[currArc]:
-            marked[currArc] = true
+            marked[currArc] = True
 
             if currArc == b:
-                return true
+                return True
             currArc = currArc.b if marked[currArc.a] else currArc.a
-        return false
+        return False
     #end isSameNode
 
     def getParent(self, arc):
-        if arc.yPnode != NULL & & arc.yPnode.parentArc != NULL:
+        if (arc.yPnode != None) and (arc.yPnode.parentArc != None):
             parent = arc.yPnode.parentArc
         else:
             marked = dict()
 
             currArc = arc
-            while true:
+            while True:
                 if currArc.twin.yParent:
                     parent = currArc.twin
                     break
                 else:
-                    marked[currArc] = true
+                    marked[currArc] = True
                     currArc = currArc.b if marked[currArc.a] else currArc.a
 
                 # if no parent
                 if marked[currArc]:
                     print("ERROR getParent() NO PARENT")
-                    parent = NULL
+                    parent = None
                     break
         return parent
