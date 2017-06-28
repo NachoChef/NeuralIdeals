@@ -5,9 +5,11 @@ class PCTree:
         m, n = len(array[0]), len(array)
         #initializing nodes to a 2m+1 by m+2 matrix
         self.nodes = [[None] * (m + 1)] * 2 * n
-        self.nodes[0] = [2, self.nodes[1], [0] * n]
-        self.nodes[1] = [2, self.nodes[0], [0] * n]
-        print(self.nodes)
+        node0, node1 = list(), list()
+        node0 = [2, node1, [0] * n]
+        node1 = [2, node0, [0] * n]
+        self.nodes[0] = node0
+        self.nodes[1] = node1
         k1, k2 = 3, 3
         for i in range(m+2):
             if self.columns[i][0] is 0:
