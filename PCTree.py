@@ -6,12 +6,12 @@ class PCTree:
         #initializing nodes to a 2m+1 by m+2 matrix
         self.nodes = [[None] * (m + 1)] * 2 * n
         node0, node1 = list(), list()
-        node0 = [2, node1, [0] * n]
-        node1 = [2, node0, [0] * n]
+        node0 = [2, node1] + [0] * n
+        node1 = [2, node0] + [0] * n
         self.nodes[0] = node0
         self.nodes[1] = node1
-        k1, k2 = 3, 3
-        for i in range(m+2):
+        k1, k2 = 2, 2
+        for i in range(m):
             if self.columns[i][0] is 0:
                 self.nodes[0][k1] = self.columns[i]
                 k1 += 1
@@ -23,18 +23,18 @@ class PCTree:
 
         index = [0] * 2 * m
 
-        for i in range(m+2):
+        for i in range(m):
             index[i] = self.columns[i]
 
         index[m] = self.nodes[0]
         index[m+1] = self.nodes[1]
 
         #non-base case implementation
-        for j in range(1, n+1):
+        for j in range(1, n):
             isize, tsize, trsize, bsize, osize, zsize, termtag = [0] * 7
             ones, zeroes, terminal, self.tried, touching = [[0] * 2 * m] * 5
             both = [0] * m
-            for i in range((2*n)+2):
+            for i in range(2*n):
                 if index[i] is not 0:
                     isize += 1
 
@@ -48,7 +48,7 @@ class PCTree:
             else:
                 raise ValueError('Invalid input, not a 1 or 0')
 
-        for i in range(m+1, isize+1):
+        for i in range(m, isize):
             onestag, zeroestag, nodestag = [False] * 3
             for k in range(1, len(index[i])):
                 if index[i][k] in self.columns:
@@ -93,30 +93,34 @@ class PCTree:
                 elif bothtag and nodestag:
                     both[bsize] = index[i]
                     bsize += 1
-
             #determine terminal path
         if bsize is not 0:
+            print("IF1")
             if bsize is 1:
+                print("IF2")
+                #pnode
                 if both[0][0] is 2:
-                    x = 1
-                    a = len(self.nodes)+1
-                    for y in range(2, len(both[0])):
+                    print("IF3")
+                    x = 0
+                    a = len(self.nodes)-1 #edited
+                    for y in range(1, len(both[0])):
                         if both[0][y] in ones:
                             self.nodes[a][x] = both[0][y]
                             x += 1
                     self.nodes[a][x] = both[0]
                     x = 1
-                    for y in range(2, len(both[0])):
+                    for y in range(1, len(both[0])):
                         if both[0][y] in zeroes:
                             both[0][x] = both[0][y]
                             x += 1
                     both[0][x] = self.nodes[a]
-
+                #cnode
                 if both[0][0] is 3:
+                    print("IF4")
                     x = 1
-                    a = len(self.nodes) + 1
+                    a = len(self.nodes) - 1
                     zr = 0
-                    for y in range(2, len(both[0])):
+                    for y in range(1, len(both[0])):
                         if both[0][y] in zeroes and both[0][y+1] in ones:
                             zr += 1
                         if both[0][y+1] in zeroes and both[0][y] in ones:
@@ -125,6 +129,7 @@ class PCTree:
                             raise ValueError('There is no possible arrangement.')
 
             else:
+                print("ELSE")
                 terminal[0] = both[0]
                 tsize += 1
                 self.traverse(both[0], both, terminal, self.tried, tsize, trsize, termtag)
@@ -153,7 +158,8 @@ class PCTree:
                 tsize -= 1
                 self.traverse(terminal[tsize], both, terminal, tsize, trsize, termtag)
 
-
+    def display(self):
+        pass
 
 
 
