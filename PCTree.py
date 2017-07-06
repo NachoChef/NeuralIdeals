@@ -5,11 +5,8 @@ class PCTree:
         m, n = len(array[0]), len(array)
         #initializing nodes to a 2m+1 by m+2 matrix
         self.nodes = [[None] * (m + 1)] * 2 * n
-        node0, node1 = list(), list()
-        node0 = [2, node1] + [0] * n
-        node1 = [2, node0] + [0] * n
-        self.nodes[0] = node0
-        self.nodes[1] = node1
+        self.nodes[0] = [2, self.nodes[1]] + [0] * n
+        self.nodes[1] = [2, self.nodes[0]] + [0] * n
         k1, k2 = 2, 2
         for i in range(m):
             if self.columns[i][0] is 0:
@@ -133,7 +130,7 @@ class PCTree:
                 terminal[0] = both[0]
                 tsize += 1
                 self.traverse(both[0], both, terminal, self.tried, tsize, trsize, termtag)
-
+        self.display()
 
     def traverse(self, array: list, both: list, terminal:list, tried: list, tsize: int, trsize: int, termtag: int):
         print("TRAVERSE")
@@ -159,7 +156,9 @@ class PCTree:
                 self.traverse(terminal[tsize], both, terminal, tsize, trsize, termtag)
 
     def display(self):
-        pass
+        for item in self.nodes:
+            if item[0] is 2:
+                print(item[1])
 
 
 
