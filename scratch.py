@@ -21,3 +21,8 @@ G.add_node(5)
 G.add_edges_from(list(total - res))
 nx.draw(G, with_labels=True)
 plt.show()
+'''
+type1 = x(\d+)\*x(\d+))(?:\*x(\d+))
+type2 = x(\d+)\*\(
+type3 = \(x(\d+)
+'''
