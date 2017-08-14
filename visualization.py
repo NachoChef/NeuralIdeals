@@ -4,112 +4,56 @@ import matplotlib.pyplot as plt
 import string, random, re
 from itertools import permutations
 
-r"""
-Determines the form of input, and translates if necessary. Then launches jar implementation of visualization.
-Does not work in SageCloud.
 
-INPUT:
-
-- ``s`` -- may be passed either as a string of space delimited neural codes, or a list of neural codes
-
-OUTPUT:
-
-    None
-
-EXAMPLES:
-    sage: visualize('110 010 011')
-    sage: visualize(['110', '010', '011'])
-
-"""
-
-
-
-
-
-
-
-
-
-
-r"""
-If passed a list of neural codes, will return a space delimited string.
-
-INPUT:
-
-- ``input`` -- a list of neural codes
-
-OUTPUT:
-
-    A space delimited string of neural codes.
-
-EXAMPLES:
-    sage:  translate(['110', '010', '011'])
-    '110 010 011'
-
-TESTS:
-
->>> codes = ['110', '010', '011']
->>> expected = '110 010 011'
->>> codes == expected
-True
-
-"""
-
-
-def sort(codes, iteration=0):
+def visualize(args, dim=1, arc=False):
     r"""
-        Returns a sorted list of lists, organized 1 -> 0
-    :param codes: a list of binary code words
-    :param iteration: the position the function will sort
-    :return: a 'sorted' code word
+        Given a list of codewords, determines form and translates to string if necessary.
+        Then launches appropriate visualization algorithm.
+        Note: 2-dim won't work in CoCalc
+
+    :param args: a list or string of codewords
+
+    :param dim: a 1 or 2, indicating 2-dimensional or 1-dimensional
+
+    :param arc: if True, 1 dimensional output will be as an arc, otherwise linear
+                default False
+
+    :return: None
+
+    ex:    >>> visualize('110 010 011', 2)
+           >>> visualize(['110', '010', '011'], 1, True)
     """
-    # if is it the first iteration, check to make sure contents are lists and coerce if not
-    # short circuit evaluation for iteration
-    if iteration == 0 and (isinstance(codes[0], int) or isinstance(codes[0], str)):
-        codes = [list(code) for code in codes]
-
-    # to make sure we don't recurse down into the sublists or exceed range
-    if not (any(isinstance(code, list) for code in codes) and len(codes) > 1):
-        return codes
-
-    # descending bubble sort
-    # maybe reverse for odd iterations?
-    for pos in reversed(range(len(codes))):
-        for subpos in range(pos):
-            if codes[subpos][iteration] < codes[subpos+1][iteration]: #so 0,1 becomes 1,0 -> shift 0 to rightmost
-                codes[subpos], codes[subpos+1] = codes[subpos+1], codes[subpos]
-
-    # return (grouped ones) + (grouped zeroes)
-    # so we find the slice index for the group of ones
-    mid = max(i for i in range(len(codes)) if codes[i][iteration] == 1)
-
-    # increment iteration and move to next position
-    # we split the lists and sort those sublists
-    iteration += 1
-    return sort(codes[:mid], iteration) + sort(codes[mid:], iteration)
+    if type(args) is list:
+        args = translate(args)
+    if dim is 2:
+        subprocess.call(['java', '-jar', os.getcwd() + '/InductiveCircles.jar', args])
+    elif dim is 1:
+        if arc:
+            subprocess.call(['java', '-jar', os.getcwd() + '/arcs.jar', args])
+        else:
+            subprocess.call(['java', '-jar', os.getcwd() + '/lines.jar', args])
+#end visualize
 
 
-def is_oscillating(codes):
-
-    for i in range(len(codes[0])-1):
-        for j in range(1, len(codes)-1):
-            #can be 0 1 0 or 1 0 1
-            if codes[j-1][i] < codes[j][i] > codes[j+1][i] or codes[j-1][i] > codes[j][i] < codes[j+1][i]:
-                return True
-    return False
-
-def fix_oscillation(codes):
+def general_graph(CF, zero=True, name=False):
     r"""
 
-    :param codes:
-    :return: boolean, codewords
+        Given a factored canonical form, will create and display a general relationship graph.
+
+    :param CF: The canonical form, either string or list
+
+    :param zero: True indicates the CF is 0-based rather than 1-based
+
+    :param name: If true, the name of the output image will be returned
+
+    :return: Name of output png, if name=True. Otherwise nothing.
+
+    ex:    >>> C = ['1001', '0111'. '0101']
+           >>> J = NeuralCode(C)
+           >>> general_graph (J.factored_canonical(), name=True)
+           >>> eXaMpLe.png
+
     """
-    # if the second set of codes are reversed then we reverse the preceding list if all upper dims are equivalent
-
-
-
-def general_graph(CF, zero=True):
-    #'[x1*x4, x1*x5, x3*x4, x3*x5, x3*(1 - x1), x5*(1 - x2), x5*(1 - x4)]'
     #split the canonical form into segments
     if type(CF) is not str:
         CF = str(CF)
@@ -140,27 +84,52 @@ def general_graph(CF, zero=True):
     nx.draw(G, node_color = colors, with_labels=True)
     fname = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(5)) + '.png'
     plt.savefig(fname)
-    html("<img src="+fname+"></img>")
-    return fname
+    html("<img src={}></img>".format(fname))
+    if name:
+        return fname
+
 
 def verify_form(CF):
+    r"""
+        Ensures all inputs in CF are valid.
+
+    :param CF: A factored canonical input. List or string.
+
+    :return: True is valid, else False
+
+    ex:    >>> verify_form('x1*x2, x2*(1-x3)')
+           >>> True
+    """
+
     CF = str(CF)
+    copyCF = CF.split(',')
+
+    #type 1
     t1 = re.findall(r'([x[0-9]*[\s*?\*\s*?x[0-9][\s*\*\s*x[0-9]*]?]?)', CF)
+
+    #type 2
     t2 = re.findall(r'(x[0-9]*\s*?\*\s*?\(x?[0-9]*\s*?[\+|\-]\s*?x?[0-9]*\)(\s*?\*\s*?\(x?[0-9]*\s*?[\+|\-]\s*?x?[0-9]*\))?)', CF)
+
+    #type 3
     t3 = re.findall(r'(\(x?[0-9]*\s*?[\+|\-]\s*?x?[0-9]*\)\s*\*\s*\(x?[0-9]*\s*[\+|\-]\s*x?[0-9]*\)(\s*\*\s*\(x?[0-9]*\s*[\+|\-]\s*x?[0-9]*\))?)', CF)
     forms = (1 for i in [t1, t2, t3] if len(i) > 0)
-    return False if sum(forms) > 2 else True
 
-def visualize(s):
-    if type(s) is list:
-        args = translate(s)
-    else:
-        args = s
-    subprocess.call(['java', '-jar', os.getcwd() + '/InductiveCircles.jar', args])
+    #if length of results are less than original, then there must be some unallowed element
+    return False if sum(forms) < len(copyCF) else True
 
-#given list of codewords, translate for jar
-#returns 101, 110, [...] to ac, ab, [...]
+
 def translate(input):
+    r"""
+    
+        Maps input list to a space delimited string.
+        
+    :param input: A list of codewords
+    
+    :return: A space-delimited string
+    
+    ex: >>>translate(['110', '101', '001'])
+        >>>'110 101 001'
+    """
     output = str()
     for item in input:
       output += "".join(map(str, [i + 1 for i, c in enumerate(item) if c is '1']))
@@ -168,12 +137,21 @@ def translate(input):
           output += " "
     return str(output)
 
+
 def gen_codewords(n, q):
     r"""
-        Calculate all possible sets of codewords given n, supp
+    
+        Calculate all possible sets of codewords given n, supports as string
+        Note: Max return size will be n!
+        
     :param n:   # of neurons
+    
     :param q:   string of supports
-    :return:    set of codeword sets
+    
+    :return:    list of codeword lists for easier manipulation
+    
+    ex:    >>> gen_codewords(2, 'A B')
+           >>> [['00', '01', '10']]
     """
     orig = string.ascii_uppercase[:n]
     perms = [''.join(p) for p in permutations(orig)]
@@ -187,5 +165,11 @@ def gen_codewords(n, q):
                 newE = str.replace(newE, letter, '1')
             newE = ''.join('0' if i.isalpha() else i for i in newE)
             subOut.append(newE)
+        #we cannot cast to a set later without making frozensets
         mainOut.append(frozenset(subOut))
-    return set(mainOut)
+        
+    #this step removes any duplicates
+    mainOut = set(mainOut)
+    
+    #and we return in an easier to manage output
+    return [sorted(tuple(e)) for e in mainOut]
