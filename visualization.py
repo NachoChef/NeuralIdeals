@@ -1,8 +1,24 @@
+r"""
+
+    A collection of various implementations centered around visualizing neural ideals in Sage.
+    
+    A bulk of the visualization software is written in java, however various calculations and the general graph will be found in this file.
+    
+    These functions are designed in such a way that they this file and the jar files are all that is needed for use, independent of the rest of the NeuralIdeals package.
+    
+    Authors: Justin Jones        jxj037@shsu.edu
+             Alexander Farrack   ajf033@shsu.edu
+    
+    Initial release: Aug 15, 2017 
+
+"""
+
 import subprocess, os
 import networkx as nx
 import matplotlib.pyplot as plt
 import string, random, re
 from itertools import permutations
+from IPython.core.display import Image, display
 
 
 def visualize(args, dim=1, arc=False):
@@ -26,12 +42,17 @@ def visualize(args, dim=1, arc=False):
     if type(args) is list:
         args = translate(args)
     if dim is 2:
-        subprocess.call(['java', '-jar', os.getcwd() + '/InductiveCircles.jar', args])
+        subprocess.call(['java', '-jar', os.path.join(os.getcwd(), 'InductiveCircles.jar'), args])
     elif dim is 1:
         if arc:
-            subprocess.call(['java', '-jar', os.getcwd() + '/arcs.jar', args])
+            #subprocess.call(['java', '-jar', os.getcwd() + '/arcs.jar', args])
+            process = subprocess.Popen(['java', '-jar', os.getcwd() + '/arcs.jar', args], stdout=subprocess.PIPE)
+            out, err = process.communicate()
+            print(out)
+            html("<img src={}></img>".format('ArcRep.jpg'))
         else:
-            subprocess.call(['java', '-jar', os.getcwd() + '/lines.jar', args])
+            subprocess.call(['java', '-jar', os.path.join(os.getcwd(), 'lines.jar'), args])
+            html("<img src={}></img>".format('LineRep.jpg'))
 #end visualize
 
 
@@ -87,13 +108,14 @@ def general_graph(CF, zero=True, name=False):
     html("<img src={}></img>".format(fname))
     if name:
         return fname
+#end general_graph
 
 
 def verify_form(CF):
     r"""
         Ensures all inputs in CF are valid.
 
-    :param CF: A factored canonical input. List or string.
+    :param CF: A factored canonical input. Should be a comma delimited string of the form '[...]' as output by Sage, or '...'.
 
     :return: True is valid, else False
 
@@ -105,17 +127,17 @@ def verify_form(CF):
     copyCF = CF.split(',')
 
     #type 1
-    t1 = re.findall(r'([x[0-9]*[\s*?\*\s*?x[0-9][\s*\*\s*x[0-9]*]?]?)', CF)
-
+    t1 = re.findall(r'^\[?\s?(x[0-9]*\s*?\*\s*?x[0-9](\s*?\*\s*?x[0-9]*)?)[\,|\]?$]', CF)
     #type 2
     t2 = re.findall(r'(x[0-9]*\s*?\*\s*?\(x?[0-9]*\s*?[\+|\-]\s*?x?[0-9]*\)(\s*?\*\s*?\(x?[0-9]*\s*?[\+|\-]\s*?x?[0-9]*\))?)', CF)
-
     #type 3
     t3 = re.findall(r'(\(x?[0-9]*\s*?[\+|\-]\s*?x?[0-9]*\)\s*\*\s*\(x?[0-9]*\s*[\+|\-]\s*x?[0-9]*\)(\s*\*\s*\(x?[0-9]*\s*[\+|\-]\s*x?[0-9]*\))?)', CF)
-    forms = (1 for i in [t1, t2, t3] if len(i) > 0)
+    forms = [i for i in [t1, t2, t3] if i]
+    forms = (1 for _ in forms)
 
     #if length of results are less than original, then there must be some unallowed element
     return False if sum(forms) < len(copyCF) else True
+#end verify_form
 
 
 def translate(input):
@@ -136,6 +158,7 @@ def translate(input):
       if output[-1] is not " ":
           output += " "
     return str(output)
+#end translate
 
 
 def gen_codewords(n, q):
@@ -173,3 +196,6 @@ def gen_codewords(n, q):
     
     #and we return in an easier to manage output
     return [sorted(tuple(e)) for e in mainOut]
+#end gen_codewords
+
+#end file
